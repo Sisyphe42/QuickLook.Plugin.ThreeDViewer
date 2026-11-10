@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    QuickLook 3D Viewer plugin — .NET Framework 4.6.2 (the SKU in QuickLook.exe.config).
+    Build:  dotnet build -c Release
+    Staging: artefacts/package  (flat root, ready to zip as .qlplugin)
+  -->
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <OutputType>Library</OutputType>
+    <AssemblyName>QuickLook.Plugin.ThreeDViewer</AssemblyName>
+    <RootNamespace>QuickLook.Plugin.ThreeDViewer</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>portable</DebugType>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\..\</RepoRoot>
+    <DepsRoot>$(RepoRoot)artefacts\deps\</DepsRoot>
+    <StageDir>$(RepoRoot)artefacts\package\</StageDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Diagnostics.cs" />
+    <Compile Include="Warmup.cs" />
+    <Compile Include="Theme.cs" />
+    <Compile Include="NativeLibrary.cs" />
+    <Compile Include="ModelLoader.cs" />
+    <Compile Include="MaterialFactory.cs" />
+    <Compile Include="SceneBuilder.cs" />
+    <Compile Include="AnimationPlayer.cs" />
+    <Compile Include="ViewerPanel.cs" />
+    <Compile Include="Plugin.cs" />
+  </ItemGroup>
+
+  <!-- Host contract: never copied into the plugin package. -->
+  <ItemGroup>
+    <Reference Include="QuickLook.Common">
+      <HintPath>D:\scoop\apps\quicklook\current\QuickLook.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    AssimpNet 5.0.0-beta1 is byte-identical to the AssimpNet shipped by QuickLook
+    4.2.2's own built-in HelixViewer. It is required because 4.1.0's glTF2 importer
+    returns zero meshes for valid GLB/GLTF files.
+    HelixToolkit.Wpf 2.24.0 is a single self-contained net462 assembly (no
+    HelixToolkit.dll / netstandard facades needed, unlike the bundled 2.5.0).
+  -->
+  <ItemGroup>
+    <Reference Include="AssimpNet">
+      <HintPath>$(DepsRoot)AssimpNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="HelixToolkit.Wpf">
+      <HintPath>$(DepsRoot)HelixToolkit.Wpf.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Flat-package staging: everything lives at the root of the .qlplugin zip. -->
+  <Target Name="StagePackage" AfterTargets="Build">
+    <MakeDir Directories="$(StageDir)" />
+    <ItemGroup>
+      <StageFile Include="$(TargetPath)" />
+      <StageFile Include="$(TargetDir)AssimpNet.dll" />
+      <StageFile Include="$(TargetDir)HelixToolkit.Wpf.dll" />
+      <StageFile Include="$(RepoRoot)QuickLook.Plugin.Metadata.config" />
+      <StageFile Include="$(RepoRoot)assets\warmup.glb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(StageFile)"
+          DestinationFiles="@(StageFile->'$(StageDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(DepsRoot)x64\assimp.dll" DestinationFiles="$(StageDir)x64\assimp.dll" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(DepsRoot)x86\assimp.dll" DestinationFiles="$(StageDir)x86\assimp.dll" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

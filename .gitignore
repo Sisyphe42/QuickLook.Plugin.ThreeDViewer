@@ -1,0 +1,20 @@
+# Build artefacts
+bin/
+obj/
+artefacts/package/
+artefacts/deps/
+artefacts/*.qlplugin
+*.user
+.vs/
+
+# Runtime diagnostics
+ThreeDViewer.log
+ThreeDViewer.debug
+
+# Research scratch (decompiled code, probes, downloaded packages)
+.research/
+
+# Large perf-test models (regenerable, see test/models/README.md)
+test/models/big.ply
+test/models/huge.ply
+test/models/heavy.stl
